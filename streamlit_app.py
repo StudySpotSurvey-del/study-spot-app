@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 import webbrowser
 
 # โหลดข้อมูลจากไฟล์ Excel
-df = pd.read_excel("spot server.xlsx", engine="openpyxl")
+df = pd.read_excel("spot server 4.xlsx", engine="openpyxl")
 
 # ส่วนหัวของแอป
 st.title("🔍 ระบบแนะนำสถานที่ติวที่เหมาะสม")
@@ -44,8 +44,6 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
         st.subheader("📍 สถานที่แนะนำ:")
         cols = st.columns(len(indices[0]))
         selected_place = None
-        selected_url = None
-
         for col, idx in zip(cols, indices[0]):
             place = filtered.iloc[idx]
             lat = place['latitude']
@@ -60,21 +58,19 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
                 - ห้องส่วนตัว: {'มี' if place['private_room'] else 'ไม่มี'}
                 """)
                 if st.button(f"✅ เลือก {place['name']}", key=place['name']):
-                    selected_place = place['name']
-                    selected_url = map_url
+                    selected_place = place
 
         st.markdown("---")
         st.subheader("คุณต้องการเลือกสถานที่ที่แนะนำหรือไม่?")
-        choice = st.radio("เลือกตัวเลือก", ["ไม่ต้องการเลือก", "ต้องการเลือกสถานที่จากด้านบน"])
-
-        if choice == "ต้องการเลือกสถานที่จากด้านบน":
-            if selected_url:
-                st.success(f"คุณเลือกสถานที่: {selected_place}")
-                st.markdown(f"[🌐 เปิดแผนที่ Google Maps]({selected_url})")
-                js = f"window.open('{selected_url}')"  # JavaScript to open new tab
-                st.components.v1.html(f"<script>{js}</script>", height=0)
-            else:
-                st.info("กรุณากดปุ่มเลือกสถานที่ด้านบนก่อน")
+        if selected_place:
+            confirm = st.button("ยืนยันการเลือกสถานที่")
+            if confirm:
+                lat = selected_place['latitude']
+                lon = selected_place['longitude']
+                map_url = f"https://www.google.com/maps?q={lat},{lon}"
+                st.markdown(f"[🌐 เปิดแผนที่ Google Maps]({map_url})")
+                st.markdown(f"<meta http-equiv='refresh' content='0; url={map_url}'>", unsafe_allow_html=True)
         else:
-            st.info("คุณเลือกไม่ต้องการเลือกสถานที่ใด")
+            st.info("คุณยังไม่ได้เลือกสถานที่ใด")
+            st.markdown("คุณเลือกไม่ต้องการเลือกสถานที่ใด")
 
