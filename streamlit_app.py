@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 import webbrowser
 
 # โหลดข้อมูลจากไฟล์ Excel
-df = pd.read_excel("spot server 4.xlsx", engine="openpyxl")
+df = pd.read_excel("spot server.xlsx", engine="openpyxl")
 
 # ส่วนหัวของแอป
 st.title("🔍 ระบบแนะนำสถานที่ติวที่เหมาะสม")
