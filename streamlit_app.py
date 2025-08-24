@@ -2,10 +2,9 @@ import streamlit as st
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import MinMaxScaler
-import webbrowser
 
 # โหลดข้อมูลจากไฟล์ Excel
-df = pd.read_excel("spot server.xlsx", engine="openpyxl")
+df = pd.read_excel("spot server 4.xlsx", engine="openpyxl")
 
 # ส่วนหัวของแอป
 st.title("🔍 ระบบแนะนำสถานที่ติวที่เหมาะสม")
@@ -13,7 +12,7 @@ st.title("🔍 ระบบแนะนำสถานที่ติวที�
 # รับค่าจากผู้ใช้ผ่าน widgets
 open_time = st.slider("เปิดไม่เกิน (ชั่วโมง)", 0, 24, 8)
 close_time = st.slider("ปิดไม่ต่ำกว่า (ชั่วโมง)", 0, 24, 16)
-distance = st.slider("ระยะทาง (กม.)", 0.5, 5.0, 1.0)
+distance = st.slider("ระยะทาง (กม.)", 0.5, 6.0, 1.0)
 air = st.radio("แอร์", ["ต้องการ", "ไม่ต้องการ"]) == "ต้องการ"
 private = st.radio("ห้องส่วนตัว", ["ต้องการ", "ไม่ต้องการ"]) == "ต้องการ"
 
@@ -45,6 +44,9 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
         cols = st.columns(len(indices[0]))
         for col, idx in zip(cols, indices[0]):
             place = filtered.iloc[idx]
+            lat = place['latitude']
+            lon = place['longitude']
+            map_url = f"https://www.google.com/maps?q={lat},{lon}"
             with col:
                 st.markdown(f"""
                 #### {place['name']}
@@ -53,9 +55,6 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
                 - แอร์: {'มี' if place['air_conditioned'] else 'ไม่มี'}
                 - ห้องส่วนตัว: {'มี' if place['private_room'] else 'ไม่มี'}
                 """)
-                map_url = f"https://www.google.com/maps?q={place['latitude']},{place['longitude']}"
                 if st.button(f"✅ ไปที่ {place['name']}", key=place['name']):
-                    st.markdown(f"[🌐 เปิดแผนที่ Google Maps]({map_url})")
-                    js = f"window.open('{map_url}')"  # JavaScript to open new tab
-                    st.components.v1.html(f"<script>{js}</script>", height=0)
-
+                    st.markdown(f"🌐 เปิดแผนที่ Google Maps")
+                    st.markdown(f"<meta http-equiv='refresh' content='0; url={map_url}'>", unsafe_allow_html=True)
