@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import MinMaxScaler
+import webbrowser
 
 # โหลดข้อมูลจากไฟล์ Excel
 df = pd.read_excel("spot server.xlsx", engine="openpyxl")
 
 # ส่วนหัวของแอป
-st.title("🔍 แนะนำสถานที่ติวที่เหมาะสม")
+st.title("🔍 ระบบแนะนำสถานที่ติวที่เหมาะสม")
 
 # รับค่าจากผู้ใช้ผ่าน widgets
 open_time = st.slider("เปิดไม่เกิน (ชั่วโมง)", 0, 24, 8)
@@ -41,8 +42,9 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
         _, indices = model.kneighbors(scaled_user)
 
         st.subheader("📍 สถานที่แนะนำ:")
-        cols = st.columns(len(indices[0]))
         selected_place = None
+        selected_map_url = None
+        cols = st.columns(len(indices[0]))
         for col, idx in zip(cols, indices[0]):
             place = filtered.iloc[idx]
             with col:
@@ -54,19 +56,19 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
                 - ห้องส่วนตัว: {'มี' if place['private_room'] else 'ไม่มี'}
                 """)
                 if st.button(f"✅ เลือก {place['name']}", key=place['name']):
-                    selected_place = place
+                    selected_place = place['name']
+                    selected_map_url = f"https://www.google.com/maps?q={place['latitude']},{place['longitude']}"
 
         st.markdown("---")
         st.subheader("คุณต้องการเลือกสถานที่ที่แนะนำหรือไม่?")
-        choice = st.radio("เลือกตัวเลือก", ["ไม่ต้องการเลือก", "ต้องการเลือกสถานที่จากด้านบน"])
+        choice = st.radio("เลือกตัวเลือก", ["ไม่ต้องการเลือก", "ต้องการเลือกสถานที่ที่แนะนำ"])
 
-        if choice == "ต้องการเลือกสถานที่จากด้านบน":
-            if selected_place is not None:
-                lat = selected_place['latitude']
-                lon = selected_place['longitude']
-                map_url = f"https://www.google.com/maps?q={lat},{lon}"
-                st.success(f"คุณเลือกสถานที่: {selected_place['name']}")
-                st.markdown(f"🌐 เปิดแผนที่ Google Maps")
+        if choice == "ต้องการเลือกสถานที่ที่แนะนำ":
+            if selected_map_url:
+                st.success(f"คุณเลือกสถานที่: {selected_place}")
+                st.markdown(f"[🌐 เปิดแผนที่ Google Maps]({selected_map_url})")
+            else:
+                st.warning("กรุณากดปุ่มเลือกสถานที่ด้านบนก่อน")
         else:
             st.info("คุณเลือกไม่ต้องการเลือกสถานที่ใด")
 
