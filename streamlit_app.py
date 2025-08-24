@@ -42,8 +42,6 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
         _, indices = model.kneighbors(scaled_user)
 
         st.subheader("📍 สถานที่แนะนำ:")
-        selected_place = None
-        selected_map_url = None
         cols = st.columns(len(indices[0]))
         for col, idx in zip(cols, indices[0]):
             place = filtered.iloc[idx]
@@ -55,20 +53,9 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
                 - แอร์: {'มี' if place['air_conditioned'] else 'ไม่มี'}
                 - ห้องส่วนตัว: {'มี' if place['private_room'] else 'ไม่มี'}
                 """)
-                if st.button(f"✅ เลือก {place['name']}", key=place['name']):
-                    selected_place = place['name']
-                    selected_map_url = f"https://www.google.com/maps?q={place['latitude']},{place['longitude']}"
-
-        st.markdown("---")
-        st.subheader("คุณต้องการเลือกสถานที่ที่แนะนำหรือไม่?")
-        choice = st.radio("เลือกตัวเลือก", ["ไม่ต้องการเลือก", "ต้องการเลือกสถานที่ที่แนะนำ"])
-
-        if choice == "ต้องการเลือกสถานที่ที่แนะนำ":
-            if selected_map_url:
-                st.success(f"คุณเลือกสถานที่: {selected_place}")
-                st.markdown(f"[🌐 เปิดแผนที่ Google Maps]({selected_map_url})")
-            else:
-                st.warning("กรุณากดปุ่มเลือกสถานที่ด้านบนก่อน")
-        else:
-            st.info("คุณเลือกไม่ต้องการเลือกสถานที่ใด")
+                map_url = f"https://www.google.com/maps?q={place['latitude']},{place['longitude']}"
+                if st.button(f"✅ ไปที่ {place['name']}", key=place['name']):
+                    st.markdown(f"[🌐 เปิดแผนที่ Google Maps]({map_url})")
+                    js = f"window.open('{map_url}')"  # JavaScript to open new tab
+                    st.components.v1.html(f"<script>{js}</script>", height=0)
 
