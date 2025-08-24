@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 import webbrowser
 
 # โหลดข้อมูลจากไฟล์ Excel
-df = pd.read_excel("spot server.xlsx", engine="openpyxl")
+df = pd.read_excel("spot server 4.xlsx", engine="openpyxl")
 
 # ส่วนหัวของแอป
 st.title("🔍 ระบบแนะนำสถานที่ติวที่เหมาะสม")
@@ -17,8 +17,20 @@ distance = st.slider("ระยะทาง (กม.)", 0.5, 6.0, 1.0)
 air = st.radio("แอร์", ["ต้องการ", "ไม่ต้องการ"]) == "ต้องการ"
 private = st.radio("ห้องส่วนตัว", ["ต้องการ", "ไม่ต้องการ"]) == "ต้องการ"
 
+# ตัวแปร session state สำหรับการเลือก
+if "selected_place" not in st.session_state:
+    st.session_state.selected_place = None
+if "confirmed" not in st.session_state:
+    st.session_state.confirmed = False
+if "declined" not in st.session_state:
+    st.session_state.declined = False
+
 # เมื่อผู้ใช้กดปุ่มค้นหา
 if st.button("🔍 ค้นหาสถานที่ติว"):
+    st.session_state.selected_place = None
+    st.session_state.confirmed = False
+    st.session_state.declined = False
+
     filtered = df[
         (df["open_time"] <= open_time) &
         (df["close_time"] >= close_time) &
@@ -43,12 +55,8 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
 
         st.subheader("📍 สถานที่แนะนำ:")
         cols = st.columns(len(indices[0]))
-        selected_place = None
         for col, idx in zip(cols, indices[0]):
             place = filtered.iloc[idx]
-            lat = place['latitude']
-            lon = place['longitude']
-            map_url = f"https://www.google.com/maps?q={lat},{lon}"
             with col:
                 st.markdown(f"""
                 #### {place['name']}
@@ -58,19 +66,34 @@ if st.button("🔍 ค้นหาสถานที่ติว"):
                 - ห้องส่วนตัว: {'มี' if place['private_room'] else 'ไม่มี'}
                 """)
                 if st.button(f"✅ เลือก {place['name']}", key=place['name']):
-                    selected_place = place
+                    st.session_state.selected_place = place
+                    st.session_state.confirmed = False
+                    st.session_state.declined = False
 
-        st.markdown("---")
-        st.subheader("คุณต้องการเลือกสถานที่ที่แนะนำหรือไม่?")
-        if selected_place:
-            confirm = st.button("ยืนยันการเลือกสถานที่")
-            if confirm:
-                lat = selected_place['latitude']
-                lon = selected_place['longitude']
-                map_url = f"https://www.google.com/maps?q={lat},{lon}"
-                st.markdown(f"[🌐 เปิดแผนที่ Google Maps]({map_url})")
-                st.markdown(f"<meta http-equiv='refresh' content='0; url={map_url}'>", unsafe_allow_html=True)
-        else:
-            st.info("คุณยังไม่ได้เลือกสถานที่ใด")
-            st.markdown("คุณเลือกไม่ต้องการเลือกสถานที่ใด")
+# ถ้ามีการเลือกสถานที่
+if st.session_state.selected_place:
+    st.markdown("---")
+    st.subheader("คุณต้องการเลือกสถานที่ที่แนะนำหรือไม่?")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("✅ ยืนยันการเลือกสถานที่"):
+            st.session_state.confirmed = True
+            st.session_state.declined = False
+    with col2:
+        if st.button("❌ ยังไม่ต้องการเลือก"):
+            st.session_state.declined = True
+            st.session_state.confirmed = False
+
+# แสดงผลลัพธ์หลังการยืนยัน
+if st.session_state.confirmed and st.session_state.selected_place is not None:
+    place = st.session_state.selected_place
+    lat = place['latitude']
+    lon = place['longitude']
+    map_url = f"https://www.google.com/maps?q={lat},{lon}"
+    st.success(f"คุณเลือกสถานที่: {place['name']}")
+    st.markdown(f"[🌐 เปิดแผนที่ Google Maps]({map_url})")
+    st.markdown(f"<meta http-equiv='refresh' content='0; url={map_url}'>", unsafe_allow_html=True)
+
+elif st.session_state.declined:
+    st.info("คุณเลือกไม่ต้องการเลือกสถานที่ใด")
 
